@@ -1,17 +1,19 @@
 The Lazy Python Reloader
 ========================
 
-This is one way to control what happens when you reload.  Modules come
-back in the same order they would be if they were being loaded for the
-first time, thus eliminating some of the unpredictability associated
-with circular module references.
+This is one way to control what happens when you reload.  Modules are
+reloaded in the same order they would be if they were being loaded for
+the first time, and for the same reasons, thus eliminating some of the
+unpredictability associated with circular module references.
 
 Usage
 -----
 
-    import foo.bar.baz
-    lazy_reload(foo)
-    from foo.bar import baz # <= foo, bar, and baz reloaded here
+::
+
+  import foo.bar.baz
+  lazy_reload(foo)
+  from foo.bar import baz # <= foo, bar, and baz reloaded here
 
 Motivation
 ----------
@@ -29,16 +31,16 @@ As a result, most applications that need to update their code
 dynamically find a way to start up a new python process for that
 purpose. **I strongly recommend you do that if it's an option for
 you**; you'll save yourself lots of debugging headaches in the long
-run.  For the rest of us, there's `lazy_reload`.
+run.  For the rest of us, there's ``lazy_reload``.
 
-What Python's `__builtin__.reload` Does
----------------------------------------
+What Python's ``__builtin__.reload`` Does
+-----------------------------------------
 
-The `reload()` function supplied by Python is very simple-minded: it
+The ``reload()`` function supplied by Python is very simple-minded: it
 causes the module's source file to be interpreted in the context of
 the existing module object.  Any attributes of the module that aren't
 overwritten by that interpretation remain in place.  So, for example a
-module can detect that it's being reloaded:
+module can detect that it's being reloaded::
 
     if 'already_loaded' in globals():
         print 'I am being reloaded'
@@ -49,41 +51,41 @@ in your program.  Because the identity of the module object doesn't
 change, direct module references will still work.  However, any
 existing references to functions or classes defined within that module
 will still point to the old definitions.  Objects created before the
-reload still refer to outdated classes via their `__class__`
+reload still refer to outdated classes via their ``__class__``
 attribute, and any local names that have been imported into other
 modules still reference their old definitions.
 
-What `lazy_reload` Does
------------------------
+What ``lazy_reload`` Does
+-------------------------
 
-`lazy_reload(foo)` (or `lazy_reload('foo')`) removes `foo` and all of
-its submodules from `sys.modules`, and arranges that the next time any
+``lazy_reload(foo)`` (or ``lazy_reload('foo')``) removes ``foo`` and all of
+its submodules from ``sys.modules``, and arranges that the next time any
 of them are imported, they will be reloaded.  Before a module is
 automatically reloaded, any attributes that are direct submodules will
-first be deleted, to prevent some forms of `import` from picking those
+first be deleted, to prevent some forms of ``import`` from picking those
 up instead of reloading the submodule.
 
-What `lazy_reload` Doesn't Do
------------------------------
+What ``lazy_reload`` Doesn't Do
+-------------------------------
 
 * It doesn't eliminate references to the reloaded module from other
-  modules.  In particular, having loaded this:
+  modules.  In particular, having loaded this::
 
         # bar.py
         import foo
         def f():
             return foo.x
         
-  the reference to `foo` is already present in `bar`, so after
-  `lazy_unload(foo)`, a call to `bar.f()` will not cause `foo` to be
+  the reference to ``foo`` is already present in ``bar``, so after
+  ``lazy_unload(foo)``, a call to ``bar.f()`` will not cause ``foo`` to be
   reloaded even though it is used there.  Thus, you are safest using
-  `lazy_unload` on modules such as plugins, that are not known to
+  ``lazy_unload`` on modules such as plugins, that are not known to
   other parts of your program by name.
     
 * It doesn't immediately cause anything to be reloaded.  Remember that
   the reload operation is *lazy*, and only happens when the module is
   being imported.
-  
-* It doesn't fold your laundry or wash your cats.  If you can't handle
-  these things yourself, consider giving up pets and clothes.
+
+* It doesn't fold your laundry or wash your cats.  If you don't enjoy
+  these activities yourself, consider giving up pets and clothes.
     
