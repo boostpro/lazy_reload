@@ -19,9 +19,10 @@
 # THE SOFTWARE.
 
 __author__ = 'Dave Abrahams <dave@boostpro.com>'
-__version__ = '1.0'
+__version__ = '1.1'
 
 import sys
+import __builtin__
 
 # If this module is itself lazy_reload'ed, the following attributes
 # will survive until we explicitly overwrite them.
@@ -31,7 +32,10 @@ __all__ = ['lazy_reload']
 if 'LazyReloader' in globals():
     # remove any existing reloader from sys.meta_path
     sys.meta_path = [ f for f in sys.meta_path if type(f) is not LazyReloader ]
+    if __builtin__.__import__ == _lazy_reload_import:
+       __builtin__.__import__ = _real_import
 else:
+    _real_import = __builtin__.__import__
     # The first load must initialize the list of modules to be loaded
     modules_to_reload = {}
 
@@ -70,22 +74,18 @@ class LazyReloader(object):
 
         # stuff the module back in sys.modules
         sys.modules[fullname] = m
-
-        # Toss out any attributes that indicate modules
-        #
-        # The builtin reload function preserves attributes, just
-        # allowing them to be overwritten.  Unfortunately, that means
-        # 'from <fullname> import <submodule>' will find the old
-        # submodule contents rather than causing a reload.
-        module_type = type(sys)
-        for k,v in m.__dict__.items():
-            if isinstance(v, module_type) \
-                    and hasattr(v, '__name__') \
-                    and v.__name__.startswith(m.__name__ + '.'):
-                del m.__dict__[k]
-    
-        # Now, a fresh reload
         reload(m)
         return m
 
 sys.meta_path.append(LazyReloader())
+
+def _lazy_reload_import(name, globals={}, locals={}, fromlist=[], level=-1):
+    m = _real_import(name, globals, locals, fromlist, level)
+    for submodule in fromlist or []:
+        fullname = m.__name__ + '.' + submodule
+        if fullname in modules_to_reload:
+            LazyReloader().load_module(fullname)
+    return m
+
+if __builtin__.__import__ == _real_import:
+    __builtin__.__import__ = _lazy_reload_import

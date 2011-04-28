@@ -90,8 +90,7 @@ lazy_reload(test.b)
 reload(e)
 # e's attempt to directly import a should cause test.a to reload
 #
-# *However*, e's "from test import b" is not expected to cause test.b
-# to be reloaded.  Is this a desired behavior?
-assert_reload_history('test.e', 'test.a')
+# Our special import hook causes e's "from test import b" to reload b
+assert_reload_history('test.e', 'test.a', 'test.b')
 
 print '****** PASSED ******'

@@ -61,10 +61,7 @@ What ``lazy_reload`` Does
 
 ``lazy_reload(foo)`` (or ``lazy_reload('foo')``) removes ``foo`` and
 all of its submodules from ``sys.modules``, and arranges that the next
-time any of them are imported, they will be reloaded.  Before a module
-is automatically reloaded, any attributes that are direct submodules
-will first be deleted, to prevent some forms of ``import`` from
-picking those up instead of reloading the submodule.
+time any of them are imported, they will be reloaded.  
 
 What ``lazy_reload`` Doesn't Do
 -------------------------------
@@ -91,8 +88,7 @@ What ``lazy_reload`` Doesn't Do
   anything explicit to reclaim memory.  If the program is holding
   references to functions and classes, don't expect them to be
   garbage-collected.  (Watch out for backtraces; information from the
-  last exception raised is one subtle way things can be kept alive
-  longer than you'd like).
+  last exception raised can keep things alive longer than you'd like).
 
 * It doesn't fold your laundry or wash your cats.  If you don't enjoy
   these activities yourself, consider the many affordable alternatives
